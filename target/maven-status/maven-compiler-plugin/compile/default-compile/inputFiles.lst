@@ -51,6 +51,7 @@
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/service/UserService.java
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/model/entity/Gouvernorat.java
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/util/ObjectMapperUtils.java
+/Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/config/DatabaseSeeder.java
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/model/dto/SourceProspectionDto.java
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/service/impl/RoleServiceImpl.java
 /Users/bilelsalem/Desktop/mywork/polytech/projects/new-gestion-stock/src/main/java/com/polytech/gestionstock/model/response/ApiResponse.java
