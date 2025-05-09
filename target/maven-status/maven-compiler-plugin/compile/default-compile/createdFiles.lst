@@ -104,6 +104,7 @@ com/polytech/gestionstock/model/dto/ClientDto$ClientDtoBuilder.class
 com/polytech/gestionstock/model/dto/ProduitDto$ProduitDtoBuilder.class
 com/polytech/gestionstock/service/RoleService.class
 com/polytech/gestionstock/repository/ContactRepository.class
+com/polytech/gestionstock/config/DatabaseSeeder.class
 com/polytech/gestionstock/model/dto/ProduitDto.class
 com/polytech/gestionstock/model/dto/DevisDto.class
 com/polytech/gestionstock/service/impl/SecteurActiviteServiceImpl.class
