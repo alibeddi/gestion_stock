@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.polytech.gestionstock.model.dto.ClientDto;
@@ -41,11 +42,31 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ClientDto>>> getAllClients() {
-        log.info("Fetching all clients");
+    public ResponseEntity<ApiResponse<List<ClientDto>>> getAllClients(
+            @RequestParam(required = false) String nom,
+            @RequestParam(required = false) String matriculeFiscal,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Long secteurActiviteId,
+            @RequestParam(required = false) String sourceProspection,
+            @RequestParam(required = false) String statut,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         
+        log.info("Fetching all clients with filters - nom: {}, matriculeFiscal: {}, email: {}, secteurActiviteId: {}, page: {}, size: {}", 
+                 nom, matriculeFiscal, email, secteurActiviteId, page, size);
+        
+        // Check if any filters are applied
+        if (nom != null || matriculeFiscal != null || email != null || secteurActiviteId != null 
+                || sourceProspection != null || statut != null) {
+            
+            return ResponseEntity.ok(ApiResponse.success(
+                clientService.findWithFilters(nom, matriculeFiscal, email, secteurActiviteId, 
+                                            sourceProspection, statut, page, size),
+                "Filtered clients retrieved successfully"));
+        }
+        
+        // No filters, return all clients
         List<ClientDto> clients = clientService.findAll();
-        
         return ResponseEntity.ok(ApiResponse.success(clients, "Clients retrieved successfully"));
     }
 

@@ -242,4 +242,61 @@ public class ClientServiceImpl implements ClientService {
         
         clientRepository.delete(client);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClientDto> findWithFilters(String nom, String matriculeFiscal, String email, 
+                                         Long secteurActiviteId, String sourceProspection, 
+                                         String statut, int page, int size) {
+        log.info("Finding clients with filters - nom: {}, matriculeFiscal: {}, email: {}, secteurActiviteId: {}, page: {}, size: {}", 
+                 nom, matriculeFiscal, email, secteurActiviteId, page, size);
+        
+        // Create a list to hold our filtering conditions
+        List<Client> filteredClients = clientRepository.findAll();
+        
+        // Apply filters one by one
+        if (nom != null && !nom.trim().isEmpty()) {
+            filteredClients = filteredClients.stream()
+                .filter(client -> client.getNom().toLowerCase().contains(nom.toLowerCase()))
+                .toList();
+        }
+        
+        if (matriculeFiscal != null && !matriculeFiscal.trim().isEmpty()) {
+            filteredClients = filteredClients.stream()
+                .filter(client -> client.getMatriculeFiscal() != null && 
+                       client.getMatriculeFiscal().toLowerCase().contains(matriculeFiscal.toLowerCase()))
+                .toList();
+        }
+        
+        if (email != null && !email.trim().isEmpty()) {
+            filteredClients = filteredClients.stream()
+                .filter(client -> client.getEmail() != null && 
+                       client.getEmail().toLowerCase().contains(email.toLowerCase()))
+                .toList();
+        }
+        
+        if (secteurActiviteId != null) {
+            SecteurActivite secteurActivite = secteurActiviteRepository.findById(secteurActiviteId)
+                    .orElse(null);
+            
+            if (secteurActivite != null) {
+                filteredClients = filteredClients.stream()
+                    .filter(client -> client.getSecteurActivite() != null && 
+                           client.getSecteurActivite().getId().equals(secteurActiviteId))
+                    .toList();
+            }
+        }
+        
+        // Apply pagination
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, filteredClients.size());
+        
+        if (fromIndex >= filteredClients.size()) {
+            return List.of(); // Empty list if page is beyond results
+        }
+        
+        List<Client> pagedClients = filteredClients.subList(fromIndex, toIndex);
+        
+        return ObjectMapperUtils.mapAll(pagedClients, ClientDto.class);
+    }
 } 

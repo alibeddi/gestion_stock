@@ -1,9 +1,9 @@
 package com.polytech.gestionstock.service;
 
+import java.util.List;
+
 import com.polytech.gestionstock.model.dto.ClientDto;
 import com.polytech.gestionstock.model.dto.ProspectDto;
-
-import java.util.List;
 
 public interface ClientService {
     ClientDto save(ClientDto clientDto);
@@ -17,6 +17,9 @@ public interface ClientService {
     List<ClientDto> findByExonere(Boolean exonere);
     List<ClientDto> findAll();
     List<ClientDto> findAllOrderByDateCreationDesc();
+    List<ClientDto> findWithFilters(String nom, String matriculeFiscal, String email, 
+                                   Long secteurActiviteId, String sourceProspection, 
+                                   String statut, int page, int size);
     long countAll();
     ClientDto convertProspectToClient(ProspectDto prospectDto);
     void delete(Long id);
