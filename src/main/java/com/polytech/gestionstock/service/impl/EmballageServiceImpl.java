@@ -6,10 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.polytech.gestionstock.exception.DuplicateEntityException;
+import com.polytech.gestionstock.exception.EntityInUseException;
 import com.polytech.gestionstock.exception.EntityNotFoundException;
 import com.polytech.gestionstock.model.dto.EmballageDto;
 import com.polytech.gestionstock.model.entity.Emballage;
+import com.polytech.gestionstock.model.entity.Produit;
 import com.polytech.gestionstock.repository.EmballageRepository;
+import com.polytech.gestionstock.repository.ProduitRepository;
 import com.polytech.gestionstock.service.EmballageService;
 import com.polytech.gestionstock.util.ObjectMapperUtils;
 
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EmballageServiceImpl implements EmballageService {
 
     private final EmballageRepository emballageRepository;
+    private final ProduitRepository produitRepository;
 
     @Override
     @Transactional
@@ -116,7 +120,11 @@ public class EmballageServiceImpl implements EmballageService {
         Emballage emballage = emballageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Emballage", "id", id));
         
-        // TODO: Check if emballage is used by any products before deletion
+        // Check if emballage is used by any products before deletion
+        List<Produit> productsUsingEmballage = produitRepository.findByEmballage(emballage);
+        if (!productsUsingEmballage.isEmpty()) {
+            throw new EntityInUseException("Emballage", id, "produits", productsUsingEmballage.size());
+        }
         
         emballageRepository.delete(emballage);
     }

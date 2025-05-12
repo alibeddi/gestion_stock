@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +38,18 @@ public class UserController {
         List<UserDto> users = userService.findAll();
         
         return ResponseEntity.ok(ApiResponse.success(users, "Users retrieved successfully"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserDto>> getCurrentUser() {
+        log.info("Fetching current user");
+        
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+        
+        UserDto user = userService.findByEmail(currentUserEmail);
+        
+        return ResponseEntity.ok(ApiResponse.success(user, "Current user retrieved successfully"));
     }
 
     @GetMapping("/{id}")
