@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +39,16 @@ public class UserController {
         List<UserDto> users = userService.findAll();
         
         return ResponseEntity.ok(ApiResponse.success(users, "Users retrieved successfully"));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody UserDto userDto) {
+        log.info("Creating new user with email: {}", userDto.getEmail());
+        
+        UserDto createdUser = userService.save(userDto);
+        
+        return ResponseEntity.ok(ApiResponse.success(createdUser, "User created successfully"));
     }
 
     @GetMapping("/me")
