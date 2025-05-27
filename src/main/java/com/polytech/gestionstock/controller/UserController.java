@@ -1,6 +1,7 @@
 package com.polytech.gestionstock.controller;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,10 +16,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.polytech.gestionstock.model.dto.PermissionDto;
 import com.polytech.gestionstock.model.dto.UserDto;
 import com.polytech.gestionstock.model.response.ApiResponse;
 import com.polytech.gestionstock.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Users", description = "Endpoints for managing users and their permissions")
 public class UserController {
 
     private final UserService userService;
@@ -91,5 +98,84 @@ public class UserController {
         userService.delete(id);
         
         return ResponseEntity.ok(ApiResponse.success(null, "User deleted successfully"));
+    }
+
+    @GetMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Get user permissions",
+        description = "Returns all permissions associated with a user (direct and from roles)"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Permissions retrieved successfully",
+            content = @Content(schema = @Schema(implementation = PermissionDto.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "User not found"
+        )
+    })
+    public ResponseEntity<ApiResponse<Set<PermissionDto>>> getUserPermissions(@PathVariable Long id) {
+        log.info("Fetching permissions for user with ID: {}", id);
+        
+        Set<PermissionDto> permissions = userService.getUserPermissions(id);
+        
+        return ResponseEntity.ok(ApiResponse.success(permissions, "User permissions retrieved successfully"));
+    }
+
+    @PostMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Assign permissions to user",
+        description = "Assigns direct permissions to a user"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Permissions assigned successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "User or permission not found"
+        )
+    })
+    public ResponseEntity<ApiResponse<UserDto>> assignPermissionsToUser(
+            @PathVariable Long id, 
+            @RequestBody Set<Long> permissionIds) {
+        log.info("Assigning permissions {} to user with ID: {}", permissionIds, id);
+        
+        UserDto updatedUser = userService.assignPermissionsToUser(id, permissionIds);
+        
+        return ResponseEntity.ok(ApiResponse.success(updatedUser, "Permissions assigned successfully"));
+    }
+
+    @DeleteMapping("/{id}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Remove permissions from user",
+        description = "Removes direct permissions from a user"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Permissions removed successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "User not found"
+        )
+    })
+    public ResponseEntity<ApiResponse<UserDto>> removePermissionsFromUser(
+            @PathVariable Long id, 
+            @RequestBody Set<Long> permissionIds) {
+        log.info("Removing permissions {} from user with ID: {}", permissionIds, id);
+        
+        UserDto updatedUser = userService.removePermissionsFromUser(id, permissionIds);
+        
+        return ResponseEntity.ok(ApiResponse.success(updatedUser, "Permissions removed successfully"));
     }
 } 

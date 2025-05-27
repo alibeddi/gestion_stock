@@ -3,6 +3,7 @@ package com.polytech.gestionstock.service.impl;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,9 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.polytech.gestionstock.exception.DuplicateEntityException;
 import com.polytech.gestionstock.exception.EntityNotFoundException;
+import com.polytech.gestionstock.model.dto.PermissionDto;
 import com.polytech.gestionstock.model.dto.UserDto;
+import com.polytech.gestionstock.model.entity.Permission;
 import com.polytech.gestionstock.model.entity.Role;
 import com.polytech.gestionstock.model.entity.User;
+import com.polytech.gestionstock.repository.PermissionRepository;
 import com.polytech.gestionstock.repository.RoleRepository;
 import com.polytech.gestionstock.repository.UserRepository;
 import com.polytech.gestionstock.service.UserService;
@@ -30,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final @Lazy PasswordEncoder passwordEncoder;
+    private final PermissionRepository permissionRepository;
 
     @Override
     @Transactional
@@ -190,5 +195,68 @@ public class UserServiceImpl implements UserService {
         }
         
         userRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public UserDto assignPermissionsToUser(Long userId, Set<Long> permissionIds) {
+        log.info("Assigning permissions {} to user with ID: {}", permissionIds, userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "id", userId));
+        
+        Set<Permission> permissionsToAdd = new HashSet<>();
+        for (Long permissionId : permissionIds) {
+            Permission permission = permissionRepository.findById(permissionId)
+                    .orElseThrow(() -> new EntityNotFoundException("Permission", "id", permissionId));
+            permissionsToAdd.add(permission);
+        }
+        
+        // Add new permissions to the existing set
+        user.getPermissions().addAll(permissionsToAdd);
+        
+        user = userRepository.save(user);
+        
+        return ObjectMapperUtils.mapToDto(user, UserDto.class);
+    }
+
+    @Override
+    @Transactional
+    public UserDto removePermissionsFromUser(Long userId, Set<Long> permissionIds) {
+        log.info("Removing permissions {} from user with ID: {}", permissionIds, userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "id", userId));
+        
+        // Remove specified permissions
+        user.setPermissions(user.getPermissions().stream()
+                .filter(permission -> !permissionIds.contains(permission.getId()))
+                .collect(Collectors.toSet()));
+        
+        user = userRepository.save(user);
+        
+        return ObjectMapperUtils.mapToDto(user, UserDto.class);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<PermissionDto> getUserPermissions(Long userId) {
+        log.info("Getting permissions for user with ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", "id", userId));
+        
+        // Combine permissions from roles and direct user permissions
+        Set<Permission> allPermissions = new HashSet<>(user.getPermissions());
+        
+        user.getRoles().forEach(role -> {
+            if (role.getPermissions() != null) {
+                allPermissions.addAll(role.getPermissions());
+            }
+        });
+        
+        return allPermissions.stream()
+                .map(permission -> ObjectMapperUtils.mapToDto(permission, PermissionDto.class))
+                .collect(Collectors.toSet());
     }
 } 

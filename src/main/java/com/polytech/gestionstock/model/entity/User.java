@@ -3,7 +3,6 @@ package com.polytech.gestionstock.model.entity;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -69,6 +68,14 @@ public class User implements UserDetails {
     )
     private Set<Role> roles = new HashSet<>();
     
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_permissions",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private Set<Permission> permissions = new HashSet<>();
+    
     @Column(name = "account_non_expired")
     private boolean accountNonExpired = true;
     
@@ -83,17 +90,30 @@ public class User implements UserDetails {
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> {
-                    String roleName = role.getName();
-                    // Check if role name already has ROLE_ prefix
-                    if (roleName.startsWith("ROLE_")) {
-                        return new SimpleGrantedAuthority(roleName);
-                    } else {
-                        return new SimpleGrantedAuthority("ROLE_" + roleName);
-                    }
-                })
-                .collect(Collectors.toList());
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        
+        // Add role-based authorities
+        roles.forEach(role -> {
+            String roleName = role.getName();
+            // Check if role name already has ROLE_ prefix
+            if (roleName.startsWith("ROLE_")) {
+                authorities.add(new SimpleGrantedAuthority(roleName));
+            } else {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+            }
+            
+            // Add all permissions from role
+            if (role.getPermissions() != null) {
+                role.getPermissions().forEach(permission -> 
+                    authorities.add(new SimpleGrantedAuthority(permission.getName())));
+            }
+        });
+        
+        // Add direct user permissions
+        permissions.forEach(permission -> 
+            authorities.add(new SimpleGrantedAuthority(permission.getName())));
+        
+        return authorities;
     }
 
     @Override

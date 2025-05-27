@@ -1,8 +1,5 @@
 package com.polytech.gestionstock.model.dto;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,14 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoleDto {
+public class PermissionDto {
     private Long id;
     
-    @NotBlank(message = "Le nom du rôle est obligatoire")
+    @NotBlank(message = "Le nom de la permission est obligatoire")
     private String name;
     
-    private String libelle;
+    private String description;
     
-    @Builder.Default
-    private Set<PermissionDto> permissions = new HashSet<>();
+    private String category;
 } 

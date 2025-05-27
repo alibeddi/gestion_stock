@@ -58,4 +58,7 @@ public class UserDto {
     
     @Builder.Default
     private boolean enabled = true;
+    
+    @Builder.Default
+    private Set<PermissionDto> permissions = new HashSet<>();
 } 
