@@ -41,6 +41,9 @@ public class UserDto {
     private String titre;
     private String adresse;
     
+    // Field for simple role assignment (e.g. "ROLE_USER" or "USER")
+    private String role;
+    
     @Builder.Default
     private Set<RoleDto> roles = new HashSet<>();
     

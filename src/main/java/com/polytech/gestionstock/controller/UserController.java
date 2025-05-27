@@ -44,7 +44,7 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody UserDto userDto) {
-        log.info("Creating new user with email: {}", userDto.getEmail());
+        log.info("Creating new user with email: {} and role: {}", userDto.getEmail(), userDto.getRole());
         
         UserDto createdUser = userService.save(userDto);
         

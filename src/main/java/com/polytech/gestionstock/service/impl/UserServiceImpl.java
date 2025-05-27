@@ -1,6 +1,8 @@
 package com.polytech.gestionstock.service.impl;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.polytech.gestionstock.exception.DuplicateEntityException;
 import com.polytech.gestionstock.exception.EntityNotFoundException;
 import com.polytech.gestionstock.model.dto.UserDto;
+import com.polytech.gestionstock.model.entity.Role;
 import com.polytech.gestionstock.model.entity.User;
+import com.polytech.gestionstock.repository.RoleRepository;
 import com.polytech.gestionstock.repository.UserRepository;
 import com.polytech.gestionstock.service.UserService;
 import com.polytech.gestionstock.util.ObjectMapperUtils;
@@ -24,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final @Lazy PasswordEncoder passwordEncoder;
 
     @Override
@@ -43,6 +48,43 @@ public class UserServiceImpl implements UserService {
         
         if (userDto.getPassword() != null && userDto.getPassword().equals(userDto.getConfirmPassword())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        
+        // Handle role assignment
+        if (userDto.getRoles() == null || userDto.getRoles().isEmpty()) {
+            // Check if there's a role field in the request
+            if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
+                String roleNameInput = userDto.getRole();
+                // Check if role name already has ROLE_ prefix
+                final String roleName = !roleNameInput.startsWith("ROLE_") 
+                    ? "ROLE_" + roleNameInput 
+                    : roleNameInput;
+                
+                Role role = roleRepository.findByName(roleName)
+                        .orElseGet(() -> {
+                            Role newRole = new Role();
+                            newRole.setName(roleName);
+                            newRole.setLibelle(roleName.replace("ROLE_", ""));
+                            return roleRepository.save(newRole);
+                        });
+                
+                Set<Role> roles = new HashSet<>();
+                roles.add(role);
+                user.setRoles(roles);
+            } else {
+                // Assign default USER role if no role specified
+                Role userRole = roleRepository.findByName("ROLE_USER")
+                        .orElseGet(() -> {
+                            Role role = new Role();
+                            role.setName("ROLE_USER");
+                            role.setLibelle("Standard User");
+                            return roleRepository.save(role);
+                        });
+                
+                Set<Role> roles = new HashSet<>();
+                roles.add(userRole);
+                user.setRoles(roles);
+            }
         }
         
         user = userRepository.save(user);
@@ -82,6 +124,27 @@ public class UserServiceImpl implements UserService {
             // Keep the existing password if not being updated
             User persistedUser = userRepository.findById(id).orElseThrow();
             existingUser.setPassword(persistedUser.getPassword());
+        }
+        
+        // Handle role updates if role field is provided
+        if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
+            String roleNameInput = userDto.getRole();
+            // Check if role name already has ROLE_ prefix
+            final String roleName = !roleNameInput.startsWith("ROLE_") 
+                ? "ROLE_" + roleNameInput 
+                : roleNameInput;
+            
+            Role role = roleRepository.findByName(roleName)
+                    .orElseGet(() -> {
+                        Role newRole = new Role();
+                        newRole.setName(roleName);
+                        newRole.setLibelle(roleName.replace("ROLE_", ""));
+                        return roleRepository.save(newRole);
+                    });
+            
+            Set<Role> roles = new HashSet<>();
+            roles.add(role);
+            existingUser.setRoles(roles);
         }
         
         existingUser = userRepository.save(existingUser);
