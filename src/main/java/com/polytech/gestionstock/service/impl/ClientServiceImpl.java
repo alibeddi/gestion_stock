@@ -10,6 +10,7 @@ import com.polytech.gestionstock.exception.EntityNotFoundException;
 import com.polytech.gestionstock.model.dto.ClientDto;
 import com.polytech.gestionstock.model.dto.ProspectDto;
 import com.polytech.gestionstock.model.entity.Client;
+import com.polytech.gestionstock.model.entity.Contact;
 import com.polytech.gestionstock.model.entity.Gouvernorat;
 import com.polytech.gestionstock.model.entity.SecteurActivite;
 import com.polytech.gestionstock.repository.ClientRepository;
@@ -88,9 +89,30 @@ public class ClientServiceImpl implements ClientService {
             throw new DuplicateEntityException("Client", "matriculeFiscal", clientDto.getMatriculeFiscal());
         }
         
+        // Save the contacts collection to preserve them
+        List<Contact> existingContacts = existingClient.getContacts();
+        
         // Update fields but preserve ID
         ObjectMapperUtils.updateEntityFromDto(clientDto, existingClient);
         existingClient.setId(id);
+        
+        // Handle contacts: if provided in the DTO, update them; otherwise keep existing
+        if (clientDto.getContacts() != null && !clientDto.getContacts().isEmpty()) {
+            // Clear and update contacts
+            existingClient.getContacts().clear();
+            
+            // Create a final reference for use in lambda
+            final Client clientRef = existingClient;
+            
+            clientDto.getContacts().forEach(contactDto -> {
+                Contact contact = ObjectMapperUtils.mapToEntity(contactDto, Contact.class);
+                contact.setClient(clientRef);
+                clientRef.getContacts().add(contact);
+            });
+        } else {
+            // Restore the contacts collection to avoid orphan removal issues
+            existingClient.setContacts(existingContacts);
+        }
         
         // Set references
         if (clientDto.getSecteurActivite() != null && clientDto.getSecteurActivite().getId() != null) {
