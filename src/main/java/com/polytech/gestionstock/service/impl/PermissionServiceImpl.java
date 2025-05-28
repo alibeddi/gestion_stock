@@ -168,8 +168,7 @@ public class PermissionServiceImpl implements PermissionService {
         createDefaultPermissionIfNotExists("roles:delete", "Delete roles", "Roles", defaultPermissions);
         
         // Permissions management
-        createDefaultPermissionIfNotExists("permissions:read", "View permissions", "Permissions", defaultPermissions);
-        createDefaultPermissionIfNotExists("permissions:assign", "Assign permissions", "Permissions", defaultPermissions);
+        // Removed permission management permissions
         
         return defaultPermissions;
     }

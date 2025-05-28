@@ -1,6 +1,7 @@
 package com.polytech.gestionstock.service.impl;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,10 @@ public class AuthServiceImpl implements AuthService {
         String roles = user.getAuthorities().stream()
                 .map(item -> item.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.joining(", "));
+                
+        List<String> authorities = user.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
 
         JwtAuthResponse response = new JwtAuthResponse();
         response.setAccessToken(jwt);
@@ -65,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
         response.setUsername(user.getUsername());
         response.setName(user.getNom() + " " + user.getPrenom());
         response.setRoles(roles);
+        response.setAuthorities(authorities);
         
         return response;
     }

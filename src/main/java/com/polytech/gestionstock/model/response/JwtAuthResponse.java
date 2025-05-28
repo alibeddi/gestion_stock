@@ -1,5 +1,7 @@
 package com.polytech.gestionstock.model.response;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +18,5 @@ public class JwtAuthResponse {
     private String username;
     private String name;
     private String roles;
+    private List<String> authorities;
 } 
