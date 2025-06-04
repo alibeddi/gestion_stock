@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.polytech.gestionstock.model.dto.ClientDto;
 import com.polytech.gestionstock.model.dto.ProspectDto;
 import com.polytech.gestionstock.model.entity.StatutProspect;
 import com.polytech.gestionstock.model.response.ApiResponse;
+import com.polytech.gestionstock.service.ClientService;
 import com.polytech.gestionstock.service.ProspectService;
 
 import jakarta.validation.Valid;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProspectController {
 
     private final ProspectService prospectService;
+    private final ClientService clientService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ProspectDto>> createProspect(@Valid @RequestBody ProspectDto prospectDto) {
@@ -139,5 +142,16 @@ public class ProspectController {
         prospectService.delete(id);
         
         return ResponseEntity.ok(ApiResponse.success(null, "Prospect deleted successfully"));
+    }
+    
+    @PostMapping("/{id}/convert")
+    public ResponseEntity<ApiResponse<ClientDto>> convertProspectToClient(@PathVariable Long id) {
+        log.info("Converting prospect with ID: {} to client", id);
+        
+        ProspectDto prospectDto = prospectService.findById(id);
+        ClientDto convertedClient = clientService.convertProspectToClient(prospectDto);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(convertedClient, "Prospect converted to client successfully"));
     }
 } 
